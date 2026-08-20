@@ -1,10 +1,6 @@
 # 大肥鱼余额显示
 
 <p align="center">
-  <img src="cover.webp" alt="大肥鱼余额显示" width="640" />
-</p>
-
-<p align="center">
   <strong>Marcel SSH 右下角常驻 DeepSeek 余额挂件 · 本地小鲸鱼气泡 + 余额实时掌握</strong>
 </p>
 
