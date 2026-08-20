@@ -60,9 +60,8 @@ Marcel SSH → 设置 → 插件市场 → 搜索“大肥鱼余额显示” →
 
 ## 致谢
 
-- 视觉/交互参考 [DeepSeek-Balance-Whale-Widget](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget)
+- 开发灵感与图片素材来源于 [DeepSeek-Balance-Whale-Widget](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget)  [其bilibili视频](https://www.bilibili.com/video/BV1Kj8u6EEtY/?share_source=copy_web&vd_source=712bfe926c6c8add3bdf727717ff8120)
 - 桌宠配置交互参考 **蕾米埃尔小桌宠**（`marcel-pet`）
-- 封面图：`DSniang02.png` 自制 + `cover.webp`
 
 ## 协议
 
