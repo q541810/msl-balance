@@ -1,9 +1,9 @@
 {
   "id": "msl-balance",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "大肥鱼余额显示",
   "publisher": "https://github.com/q541810",
-  "description": "右下角常驻 DeepSeek 余额挂件：本地小鲸鱼气泡 + 余额自动刷新（60s）/ 手动刷新 / 拖拽吸附 / 镜像翻转 / Q 挤压 / 尺寸调节",
+  "description": "右下角常驻 DeepSeek 余额挂件：本地小鲸鱼气泡 + 余额自动刷新（60s）/ 手动刷新 / 拖拽吸附 / 镜像翻转 / Q 挤压 / 尺寸调节 · 梁文峰/文谷双档价目",
   "minAppVersion": "0.8.0",
   "capabilities": ["ui.inject", "fs.read", "fs.write", "net.request"],
   "injections": [
