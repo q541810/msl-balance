@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>大肥鱼余额 · 配置</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font, system-ui, sans-serif);
+      background: var(--bg, #18181b);
+      color: var(--text, #f4f4f5);
+      padding: 20px 24px;
+      height: 100vh;
+      overflow-y: auto;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    h2 { font-size: 17px; font-weight: 650; letter-spacing: -0.01em; margin-bottom: 4px; }
+    .sub { font-size: 12px; color: var(--text-muted, #71717a); margin-bottom: 20px; }
+
+    .section { margin-bottom: 22px; }
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted, #71717a);
+      margin-bottom: 10px;
+    }
+    .card {
+      background: var(--bg-secondary, #27272a);
+      border: 1px solid var(--border, #3f3f46);
+      border-radius: var(--radius-lg, 12px);
+      padding: 14px 16px;
+    }
+
+    /* 尺寸行：预览 + 滑块（参照蕾米埃尔小桌宠） */
+    .size-row { display: flex; align-items: center; gap: 20px; }
+    .preview {
+      /* 预览框容纳最大尺寸（292px 上限）+ 留白，预览图 1:1 真实像素 */
+      width: 300px; height: 300px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      /* 浅色底：素材为白底设计，multiply 会压暗鲸鱼颜色（像蒙雾），这里显示真实颜色 */
+      background: #f4f4f5;
+      border: 1px solid var(--border-strong, #52525b);
+      border-radius: var(--radius-md, 8px);
+      overflow: hidden;
+    }
+    .preview img {
+      /* 1:1 真实尺寸：预览里看到多大，挂件就是多大 */
+      width: var(--preview-size, 196px);
+      height: var(--preview-size, 196px);
+      object-fit: contain;
+    }
+    .size-controls { flex: 1; min-width: 0; }
+    .size-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+    .size-head label { font-size: 13px; color: var(--text-secondary, #a1a1aa); }
+    .size-val {
+      font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+      color: var(--accent, #a78bfa);
+    }
+    input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--border-strong, #52525b);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent, #a78bfa);
+      border: none;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+      cursor: grab;
+      transition: transform 120ms ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      transform: scale(1.15);
+    }
+    .size-hint { font-size: 11px; color: var(--text-muted, #71717a); margin-top: 6px; }
+
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+    .toggle-info label { display: block; font-size: 13px; color: var(--text, #f4f4f5); }
+    .toggle-info .desc { font-size: 11px; color: var(--text-muted, #71717a); margin-top: 2px; }
+    .switch {
+      position: relative;
+      width: 40px; height: 24px;
+      flex-shrink: 0;
+      background: var(--border-strong, #52525b);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 180ms ease;
+    }
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+      transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .switch.on { background: var(--accent, #a78bfa); }
+    .switch.on::after { transform: translateX(16px); }
+
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    label { font-size: 13px; display: block; margin-bottom: 6px; }
+    .desc { font-size: 11px; color: var(--text-muted, #71717a); margin-top: 4px; line-height: 1.6; }
+    input[type="password"], input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 13px;
+      background: var(--bg-elevated, #1c1c1f);
+      color: var(--text, #f4f4f5);
+      border: 1px solid var(--border-strong, #52525b);
+      border-radius: var(--radius-md, 8px);
+      outline: none;
+      transition: border-color 150ms ease, box-shadow 150ms ease;
+    }
+    input[type="password"]:focus, input[type="text"]:focus {
+      border-color: var(--accent, #a78bfa);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--text-secondary, #a1a1aa);
+      background: rgba(167, 139, 250, 0.08);
+      border: 1px solid rgba(167, 139, 250, 0.2);
+      border-radius: var(--radius-md, 8px);
+      padding: 10px 12px;
+      line-height: 1.7;
+    }
+    .hint b { color: var(--accent, #a78bfa); }
+    .error-bar {
+      display: none;
+      margin-bottom: 14px;
+      padding: 9px 12px;
+      font-size: 12px;
+      color: var(--danger, #f87171);
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.25);
+      border-radius: var(--radius-md, 8px);
+    }
+    .error-bar.show { display: block; }
+    .toast {
+      position: fixed;
+      left: 50%; bottom: 18px;
+      transform: translateX(-50%) translateY(8px);
+      padding: 8px 16px;
+      font-size: 12.5px;
+      border-radius: 999px;
+      background: var(--bg-elevated, #1c1c1f);
+      border: 1px solid var(--border-strong, #52525b);
+      color: var(--text, #f4f4f5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+      z-index: 10;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: var(--success, #4ade80); color: var(--success, #4ade80); }
+    .toast.error { border-color: var(--danger, #f87171); color: var(--danger, #f87171); }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border, #3f3f46); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-strong, #52525b); }
+  </style>
+</head>
+<body>
+  <h2>大肥鱼余额设置</h2>
+  <div class="sub">改动即时生效，无需保存</div>
+
+  <div class="error-bar" id="errorBar"></div>
+
+  <!-- 外观：尺寸 -->
+  <div class="section">
+    <div class="section-title">外观</div>
+    <div class="card">
+      <div class="size-row">
+        <div class="preview">
+          <img id="previewImg" src="whale.png" alt="">
+        </div>
+        <div class="size-controls">
+          <div class="size-head">
+            <label>挂件尺寸</label>
+            <span class="size-val" id="sizeVal">1.2×</span>
+          </div>
+          <input type="range" id="size" min="0.6" max="1.4" step="0.1" value="1.2">
+          <div class="size-hint">预览与挂件等大显示（基准 196px × 倍率），松手后挂件同步</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 显示：文峰/文谷 -->
+  <div class="section">
+    <div class="section-title">显示</div>
+    <div class="card">
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <label>梁文峰 / 梁文谷</label>
+          <div class="desc">高峰显示“文峰当班”，空闲“文谷摸鱼”，悬浮可见完整价目（北京时间 9-12/14-18 为高峰）</div>
+        </div>
+        <div class="switch on" id="wenfengSwitch" role="switch" aria-checked="true"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 连接：Key / Base URL -->
+  <div class="section">
+    <div class="section-title">连接</div>
+    <div class="card">
+      <div class="field">
+        <label>DeepSeek API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+        <div class="desc">用于调用 <code>/user/balance</code> 查询余额。应用密钥链中的 Key 插件无法读取，需单独配置。Key 仅保存在插件目录的 config.json 中。</div>
+      </div>
+      <div class="field">
+        <label>API Base URL</label>
+        <input type="text" id="baseUrl" placeholder="https://api.deepseek.com/v1" spellcheck="false">
+        <div class="desc">默认 <code>https://api.deepseek.com/v1</code>。需包含 <code>/v1</code>（与大多数 DeepSeek 客户端保持一致），余额接口会自动适配。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="hint">
+      <b>功能一览：</b>60s 自动刷新 + 点击气泡手动刷新 · 余额变化数字滚动动画 · 网络抖动沿用最近余额不报错 · 拖拽靠近四边吸附（可组合成角）· 左半边水平镜像 / 吸附上边垂直翻转 · 按压 Q 弹 + 按 <b>Q</b> 键捏鲸鱼 · 尺寸在配置页调整（0.6–1.4×）· 梁文峰/文谷双档价目（高峰 9-12/14-18）。
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (() => {
+      const PLUGIN_ID = 'msl-balance';
+      const DEFAULTS = { apiKey: '', baseUrl: 'https://api.deepseek.com/v1', scale: 1.2, showWenfeng: true };
+      const BASE_PX = 196; // 基准尺寸上限（min(196px, 视口*0.22)），预览按此换算真实像素
+
+      const tauriEvent = window.__TAURI__ && window.__TAURI__.event;
+      const emit = tauriEvent ? tauriEvent.emit.bind(tauriEvent) : () => Promise.reject(new Error('__TAURI__.event unavailable'));
+      const listen = tauriEvent ? tauriEvent.listen.bind(tauriEvent) : () => Promise.reject(new Error('__TAURI__.event unavailable'));
+
+      const keyInput = document.getElementById('apiKey');
+      const urlInput = document.getElementById('baseUrl');
+      const sizeInput = document.getElementById('size');
+      const sizeVal = document.getElementById('sizeVal');
+      const previewImg = document.getElementById('previewImg');
+      const wenfengSwitch = document.getElementById('wenfengSwitch');
+      const errorBar = document.getElementById('errorBar');
+      const toastEl = document.getElementById('toast');
+
+      let toastTimer = null;
+      function showToast(msg, kind) {
+        clearTimeout(toastTimer);
+        toastEl.textContent = msg;
+        toastEl.className = 'toast show' + (kind ? ' ' + kind : '');
+        toastTimer = setTimeout(() => { toastEl.className = 'toast'; }, 2000);
+      }
+      function showError(msg) {
+        errorBar.textContent = msg;
+        errorBar.classList.add('show');
+      }
+      function clearError() { errorBar.classList.remove('show'); }
+
+      function ipc(cmd, args, timeoutMs) {
+        timeoutMs = timeoutMs || 5000;
+        args = args || {};
+        const id = 'cfg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+        return new Promise((resolve, reject) => {
+          let settled = false;
+          const timer = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            reject(new Error('ipc "' + cmd + '" timed out'));
+          }, timeoutMs);
+          listen('plugin-response-' + id, (e) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            if (e.payload && e.payload.ok) resolve(e.payload.data);
+            else reject(new Error(String(e.payload && e.payload.data)));
+          })
+            .then((unlisten) => {
+              if (settled) { unlisten(); return; }
+              emit('plugin-request', { id, pluginId: PLUGIN_ID, cmd, args }).catch((err) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                reject(new Error('emit failed: ' + err));
+              });
+            })
+            .catch((err) => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timer);
+              reject(new Error('listen failed: ' + err));
+            });
+        });
+      }
+
+      // 预览 1:1 真实像素：预览里看到多大，挂件就是多大
+      function syncPreview(scale) {
+        document.documentElement.style.setProperty('--preview-size', Math.round(BASE_PX * scale) + 'px');
+      }
+      function syncValText(scale) {
+        sizeVal.textContent = scale.toFixed(1) + '×';
+      }
+      function syncWenfeng(on) {
+        wenfengSwitch.classList.toggle('on', on);
+        wenfengSwitch.setAttribute('aria-checked', String(on));
+      }
+
+      let persistTimer = null;
+      function persist(immediate) {
+        clearTimeout(persistTimer);
+        const flush = async () => {
+          try {
+            // 合并写：保留挂件字段（snapX/snapY/x/y）
+            let existing = { ...DEFAULTS };
+            try {
+              const raw = await ipc('config.read');
+              if (raw) existing = { ...DEFAULTS, ...JSON.parse(raw) };
+            } catch (e) {
+              console.error('[config] read failed:', e);
+            }
+            const cfg = {
+              ...existing,
+              apiKey: keyInput.value.trim(),
+              baseUrl: (urlInput.value.trim() || DEFAULTS.baseUrl).replace(/\/+$/, ''),
+              scale: Number(sizeInput.value),
+              showWenfeng: wenfengSwitch.classList.contains('on'),
+            };
+            await ipc('config.write', { content: JSON.stringify(cfg, null, 2) });
+            clearError();
+            return cfg;
+          } catch (e) {
+            console.error('[config] save failed:', e);
+            showError('保存失败: ' + (e && e.message ? e.message : e));
+            return null;
+          }
+        };
+        if (immediate) return flush();
+        persistTimer = setTimeout(flush, 250);
+      }
+
+      // 滑块松手：立即写盘（防页面关闭丢改动）+ 事件 payload 带完整新配置（消除读旧文件竞态）
+      async function applyAndPersist() {
+        const cfg = await persist(true);
+        emit('msl-balance://config-saved', cfg || { scale: Number(sizeInput.value) }).catch(() => {});
+      }
+
+      (async function init() {
+        try {
+          const raw = await ipc('config.read');
+          if (raw) {
+            const c = JSON.parse(raw);
+            keyInput.value = c.apiKey || '';
+            urlInput.value = c.baseUrl || DEFAULTS.baseUrl;
+            sizeInput.value = String(c.scale != null ? c.scale : DEFAULTS.scale);
+            syncWenfeng(c.showWenfeng !== false);
+          } else {
+            urlInput.value = DEFAULTS.baseUrl;
+            syncWenfeng(true);
+          }
+        } catch (e) {
+          console.error('[config] init failed:', e);
+          showError('无法读取配置（' + (e && e.message ? e.message : e) + '），当前显示默认值。');
+          urlInput.value = DEFAULTS.baseUrl;
+          syncWenfeng(true);
+        }
+        syncValText(Number(sizeInput.value));
+        syncPreview(Number(sizeInput.value));
+      })();
+
+      // 尺寸：拖动只改预览（零 IPC），松手才应用 + 写盘 + 通知挂件
+      sizeInput.addEventListener('input', () => {
+        syncValText(Number(sizeInput.value));
+        syncPreview(Number(sizeInput.value));
+      });
+      sizeInput.addEventListener('change', () => {
+        applyAndPersist();
+        showToast('已应用', 'success');
+      });
+
+      wenfengSwitch.addEventListener('click', () => {
+        const on = !wenfengSwitch.classList.contains('on');
+        syncWenfeng(on);
+        applyAndPersist();
+        showToast(on ? '已开启文峰/文谷' : '已关闭', 'success');
+      });
+
+      keyInput.addEventListener('input', persist);
+      urlInput.addEventListener('input', persist);
+    })();
+  </script>
+</body>
+</html>

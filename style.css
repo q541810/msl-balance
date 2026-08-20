@@ -1,0 +1,209 @@
+/* msl-balance 挂件样式 — 全局注入，用 [data-msl-balance-widget] 作用域前缀避免污染
+   几何参数参考 DeepSeek-Balance-Whale-Widget（DSH 版）：
+   气泡椭圆中心像素 (455,247)/1026 → left 44.346% / top 25.5%；长轴 710、纵轴 430。
+   文字三行（label/金额/hint）以气泡中心为锚点；字号随挂件等比缩放（--msl-u 单位）。 */
+[data-msl-balance-widget] {
+  /* 基准尺寸：固定 196px × scale（配置页预览按同一公式 1:1 换算）；
+     不用视口自适应——插件 API 查不到主窗口尺寸，视口公式会导致预览与真实不一致 */
+  --msl-w: clamp(96px, calc(196px * var(--msl-scale, 1)), 292px);
+  --msl-u: calc(var(--msl-w) / 1026);
+  --msl-scale: 1;
+
+  position: fixed;
+  z-index: 99999;
+  width: var(--msl-w);
+  height: var(--msl-w);
+
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+
+  color: #536ba9;
+  font-family: var(--mslb-font, system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif);
+  line-height: 1.18;
+
+  /* 左半边 → 水平镜像；吸附上边 → 垂直翻转（组合时叠加） */
+  transition: left 160ms ease, top 160ms ease, transform 300ms ease;
+}
+[data-msl-balance-widget][data-mslb-mirror-x="1"] {
+  transform: scaleX(-1);
+}
+[data-msl-balance-widget][data-mslb-mirror-y="1"] {
+  transform: scaleY(-1);
+}
+[data-msl-balance-widget][data-mslb-mirror-x="1"][data-mslb-mirror-y="1"] {
+  transform: scaleX(-1) scaleY(-1);
+}
+/* 拖拽中：关掉过渡，跟手不延迟 */
+[data-msl-balance-widget][data-mslb-dragging="1"] {
+  transition: none;
+  cursor: grabbing;
+}
+/* 吸附状态切换时的位移动画（仅状态变化时启用） */
+[data-msl-balance-widget][data-mslb-snap-anim="1"] {
+  transition: left 200ms cubic-bezier(0.34, 1.3, 0.64, 1),
+              top 200ms cubic-bezier(0.34, 1.3, 0.64, 1),
+              transform 300ms ease;
+}
+
+/* ── body 层：承载按压 Q 弹（底部坐标不变），与镜像分层互不干扰 ── */
+[data-msl-balance-widget] .mslb-body {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+[data-msl-balance-widget] .mslb-body.mslb-squish {
+  transform: scaleY(0.88) scaleX(1.05);
+}
+
+/* ── 鲸鱼图：multiply 消白，深色 UI 下白底自动消失 ── */
+[data-msl-balance-widget] .mslb-whale-wrap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: mslb-bob 4.5s ease-in-out infinite;
+}
+[data-msl-balance-widget] .mslb-whale-wrap img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+@keyframes mslb-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+
+/* ── 气泡点击热区：覆盖素材气泡范围（左下 7-55% x 4-48%），仅用于点击刷新 ── */
+[data-msl-balance-widget] .mslb-bubble-hit {
+  position: absolute;
+  left: 7%;
+  top: 4.5%;
+  width: 48%;
+  height: 44%;
+  pointer-events: auto;
+  cursor: pointer;
+}
+[data-msl-balance-widget] .mslb-bubble-hit:active {
+  transform: scale(0.97);
+}
+
+/* ── 文字块：锚定气泡精确中心，镜像时反向保持可读 ── */
+[data-msl-balance-widget] .mslb-text {
+  position: absolute;
+  left: 44.346%;
+  top: 25.5%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--msl-u) * 14);
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: transform 300ms ease;
+}
+[data-msl-balance-widget][data-mslb-mirror-x="1"] .mslb-text {
+  transform: translate(-50%, -50%) scaleX(-1);
+}
+[data-msl-balance-widget][data-mslb-mirror-y="1"] .mslb-text {
+  transform: translate(-50%, -50%) scaleY(-1);
+}
+[data-msl-balance-widget][data-mslb-mirror-x="1"][data-mslb-mirror-y="1"] .mslb-text {
+  transform: translate(-50%, -50%) scaleX(-1) scaleY(-1);
+}
+
+[data-msl-balance-widget] .mslb-label {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--msl-u) * 10);
+  font-size: calc(var(--msl-u) * 68);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #536ba9;
+}
+[data-msl-balance-widget] .mslb-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  font-size: calc(var(--msl-u) * 119);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: #536ba9;
+  white-space: nowrap;
+}
+[data-msl-balance-widget] .mslb-currency {
+  font-size: 0.52em;
+  font-weight: 700;
+  margin-right: 0.1em;
+}
+[data-msl-balance-widget] .mslb-hint {
+  font-size: calc(var(--msl-u) * 54);
+  letter-spacing: 0.02em;
+  color: #9fb0d9;
+}
+[data-msl-balance-widget] .mslb-hint[data-tier="peak"] { color: #d97706; }
+[data-msl-balance-widget] .mslb-hint[data-tier="idle"] { color: #0ea5e9; }
+/* 滚动数字单元 */
+[data-msl-balance-widget] .mslb-digit {
+  display: inline-block;
+  overflow: hidden;
+  height: 1em;
+  vertical-align: text-bottom;
+  position: relative;
+}
+[data-msl-balance-widget] .mslb-droll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+[data-msl-balance-widget] .mslb-droll > span {
+  height: 1em;
+  line-height: 1;
+  display: block;
+}
+/* 未配置 / 加载失败态 */
+[data-msl-balance-widget] .mslb-empty {
+  font-size: calc(var(--msl-u) * 54);
+  font-weight: 700;
+  color: #536ba9;
+  text-align: center;
+}
+/* 状态点 */
+[data-msl-balance-widget] .mslb-dot {
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  background: rgba(83, 107, 169, 0.4);
+}
+[data-msl-balance-widget] .mslb-dot.ok { background: #4ade80; }
+[data-msl-balance-widget] .mslb-dot.stale { background: #fbbf24; }
+[data-msl-balance-widget] .mslb-dot.err { background: #f87171; }
+[data-msl-balance-widget] .mslb-dot.loading {
+  background: #a78bfa;
+  animation: mslb-pulse 1s ease-in-out infinite;
+}
+@keyframes mslb-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-msl-balance-widget] { transition: none; }
+  [data-msl-balance-widget] .mslb-whale-wrap { animation: none; }
+  [data-msl-balance-widget] .mslb-droll { transition: none; }
+}
