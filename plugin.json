@@ -6,6 +6,7 @@
   "description": "右下角常驻 DeepSeek 余额挂件：本地小鲸鱼气泡 + 余额自动刷新（60s）/ 手动刷新 / 拖拽吸附 / 镜像翻转 / Q 挤压 / 尺寸调节 · 梁文峰/文谷，高峰空闲显示（可开关）",
   "minAppVersion": "1.0.1",
   "capabilities": ["ui.inject", "fs.read", "fs.write", "net.request"],
+  "preservePaths": ["config.json"],
   "injections": [
     {
       "id": "widget",
