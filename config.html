@@ -210,9 +210,21 @@
       <div class="toggle-row">
         <div class="toggle-info">
           <label>梁文峰 / 梁文谷</label>
-          <div class="desc">高峰显示“文峰当班”，空闲“文谷摸鱼”，悬浮可见完整价目（北京时间 9-12/14-18 为高峰）</div>
+          <div class="desc">高峰/空闲时段显示可自定义文案，悬浮可见完整价目（北京时间 9-12/14-18 为高峰）</div>
         </div>
         <div class="switch on" id="wenfengSwitch" role="switch" aria-checked="true"></div>
+      </div>
+      <div id="wenfengFields" style="margin-top: 14px; display: grid; gap: 12px; border-top: 1px solid var(--border, #3f3f46); padding-top: 14px;">
+        <div class="field" style="margin-bottom: 0;">
+          <label>高峰文案</label>
+          <input type="text" id="wenfengPeak" placeholder="文峰当班" maxlength="20" spellcheck="false">
+          <div class="desc">高峰时段（9:00-12:00 / 14:00-18:00）气泡显示</div>
+        </div>
+        <div class="field" style="margin-bottom: 0;">
+          <label>空闲文案</label>
+          <input type="text" id="wenfengIdle" placeholder="文谷摸鱼" maxlength="20" spellcheck="false">
+          <div class="desc">空闲时段气泡显示</div>
+        </div>
       </div>
     </div>
   </div>
@@ -236,7 +248,7 @@
 
   <div class="card">
     <div class="hint">
-      <b>功能一览：</b>60s 自动刷新 + 点击气泡手动刷新 · 余额变化数字滚动动画 · 网络抖动沿用最近余额不报错 · 拖拽靠近四边吸附（可组合成角）· 左半边水平镜像 / 吸附上边垂直翻转 · 按压 Q 弹 + 按 <b>Q</b> 键捏鲸鱼 · 尺寸在配置页调整（0.6–1.4×）· 梁文峰/文谷双档价目（高峰 9-12/14-18）。
+      <b>功能一览：</b>60s 自动刷新 + 点击气泡手动刷新 · 余额变化数字滚动动画 · 网络抖动沿用最近余额不报错 · 拖拽靠近四边吸附（可组合成角）· 左半边水平镜像 / 吸附上边垂直翻转 · 按压 Q 弹 + 按 <b>Q</b> 键捏鲸鱼 · 尺寸在配置页调整（0.6–1.4×）· 梁文峰/文谷高峰空闲显示（文案可自定义）。
     </div>
   </div>
 
@@ -245,7 +257,7 @@
   <script>
     (() => {
       const PLUGIN_ID = 'msl-balance';
-      const DEFAULTS = { apiKey: '', baseUrl: 'https://api.deepseek.com/v1', scale: 1.2, showWenfeng: true };
+      const DEFAULTS = { apiKey: '', baseUrl: 'https://api.deepseek.com/v1', scale: 1.2, showWenfeng: true, wenfengPeak: '文峰当班', wenfengIdle: '文谷摸鱼' };
       const BASE_PX = 196; // 基准尺寸上限（min(196px, 视口*0.22)），预览按此换算真实像素
 
       const tauriEvent = window.__TAURI__ && window.__TAURI__.event;
@@ -258,6 +270,9 @@
       const sizeVal = document.getElementById('sizeVal');
       const previewImg = document.getElementById('previewImg');
       const wenfengSwitch = document.getElementById('wenfengSwitch');
+      const wenfengFields = document.getElementById('wenfengFields');
+      const peakInput = document.getElementById('wenfengPeak');
+      const idleInput = document.getElementById('wenfengIdle');
       const errorBar = document.getElementById('errorBar');
       const toastEl = document.getElementById('toast');
 
@@ -320,6 +335,9 @@
       function syncWenfeng(on) {
         wenfengSwitch.classList.toggle('on', on);
         wenfengSwitch.setAttribute('aria-checked', String(on));
+        wenfengFields.style.display = on ? 'grid' : 'none';
+        peakInput.disabled = !on;
+        idleInput.disabled = !on;
       }
 
       let persistTimer = null;
@@ -341,6 +359,8 @@
               baseUrl: (urlInput.value.trim() || DEFAULTS.baseUrl).replace(/\/+$/, ''),
               scale: Number(sizeInput.value),
               showWenfeng: wenfengSwitch.classList.contains('on'),
+              wenfengPeak: (peakInput.value.trim() || DEFAULTS.wenfengPeak).slice(0, 20),
+              wenfengIdle: (idleInput.value.trim() || DEFAULTS.wenfengIdle).slice(0, 20),
             };
             await ipc('config.write', { content: JSON.stringify(cfg, null, 2) });
             clearError();
@@ -369,15 +389,21 @@
             keyInput.value = c.apiKey || '';
             urlInput.value = c.baseUrl || DEFAULTS.baseUrl;
             sizeInput.value = String(c.scale != null ? c.scale : DEFAULTS.scale);
+            peakInput.value = c.wenfengPeak != null ? String(c.wenfengPeak) : DEFAULTS.wenfengPeak;
+            idleInput.value = c.wenfengIdle != null ? String(c.wenfengIdle) : DEFAULTS.wenfengIdle;
             syncWenfeng(c.showWenfeng !== false);
           } else {
             urlInput.value = DEFAULTS.baseUrl;
+            peakInput.value = DEFAULTS.wenfengPeak;
+            idleInput.value = DEFAULTS.wenfengIdle;
             syncWenfeng(true);
           }
         } catch (e) {
           console.error('[config] init failed:', e);
           showError('无法读取配置（' + (e && e.message ? e.message : e) + '），当前显示默认值。');
           urlInput.value = DEFAULTS.baseUrl;
+          peakInput.value = DEFAULTS.wenfengPeak;
+          idleInput.value = DEFAULTS.wenfengIdle;
           syncWenfeng(true);
         }
         syncValText(Number(sizeInput.value));
@@ -400,6 +426,15 @@
         applyAndPersist();
         showToast(on ? '已开启文峰/文谷' : '已关闭', 'success');
       });
+
+      // 文案输入：防抖 300ms 后写盘并通知挂件即时预览
+      let wenfengInputTimer = null;
+      function onWenfengTextInput() {
+        clearTimeout(wenfengInputTimer);
+        wenfengInputTimer = setTimeout(() => { applyAndPersist(); }, 300);
+      }
+      peakInput.addEventListener('input', onWenfengTextInput);
+      idleInput.addEventListener('input', onWenfengTextInput);
 
       keyInput.addEventListener('input', persist);
       urlInput.addEventListener('input', persist);

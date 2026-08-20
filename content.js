@@ -19,6 +19,8 @@
     x: null,
     y: null,
     showWenfeng: true,
+    wenfengPeak: '文峰当班',
+    wenfengIdle: '文谷摸鱼',
   };
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -38,12 +40,23 @@
   };
   function currentPricingTier() { return isPeakNow() ? 'peak' : 'idle'; }
   function fmtPricePair(pair) { return pair[0] + '/' + pair[1]; }
+  function wenfengLabel(tier) {
+    const raw = tier === 'peak' ? cfg.wenfengPeak : cfg.wenfengIdle;
+    const fallback = tier === 'peak' ? '文峰当班' : '文谷摸鱼';
+    const s = String(raw || '').trim();
+    return s || fallback;
+  }
+  function withLiang(label) {
+    const s = String(label || '').trim();
+    return s.startsWith('梁') ? s : '梁' + s;
+  }
   function wenfengHint() {
-    return isPeakNow() ? '文峰当班 · 点击看价' : '文谷摸鱼 · 点击看价';
+    return wenfengLabel(isPeakNow() ? 'peak' : 'idle') + ' · 点击看价';
   }
   function wenfengTitleLine() {
     const tier = currentPricingTier();
-    const tag = tier === 'peak' ? '梁文峰当班（高峰 9-12/14-18）' : '梁文谷摸鱼（空闲 其余时段）';
+    const label = wenfengLabel(tier);
+    const tag = withLiang(label) + (tier === 'peak' ? '（高峰 9-12/14-18）' : '（空闲 其余时段）');
     // 价目按表：命中/未命中/输出，均展示 A/B 两列
     const ih = PRICING.inputHit[tier];
     const im = PRICING.inputMiss[tier];
@@ -125,6 +138,8 @@
           x: cfg.x,
           y: cfg.y,
           showWenfeng: cfg.showWenfeng,
+          wenfengPeak: String(cfg.wenfengPeak || '').trim() || DEFAULT_CFG.wenfengPeak,
+          wenfengIdle: String(cfg.wenfengIdle || '').trim() || DEFAULT_CFG.wenfengIdle,
         };
         await marcel.ipc.call('config.write', { content: JSON.stringify(merged, null, 2) });
       } catch (e) {
@@ -229,7 +244,9 @@
         if (p && typeof p === 'object') {
           if (p.scale != null) cfg.scale = clamp(Number(p.scale) || 1.2, 0.6, 1.4);
           if (typeof p.showWenfeng === 'boolean') { cfg.showWenfeng = p.showWenfeng; needsRender = true; }
-          if (p.showWenfeng == null && p.scale == null) await readConfig({});
+          if (typeof p.wenfengPeak === 'string') { cfg.wenfengPeak = p.wenfengPeak.trim() || DEFAULT_CFG.wenfengPeak; needsRender = true; }
+          if (typeof p.wenfengIdle === 'string') { cfg.wenfengIdle = p.wenfengIdle.trim() || DEFAULT_CFG.wenfengIdle; needsRender = true; }
+          if (p.showWenfeng == null && p.scale == null && p.wenfengPeak == null && p.wenfengIdle == null) await readConfig({});
           else if (p.showWenfeng != null && p.scale == null) { /* 已应用 */ }
         } else {
           await readConfig({});
