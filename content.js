@@ -592,9 +592,11 @@
 
   // ── 窗口尺寸变化 ──
   function onResize() {
+    // 窗口还原/最大化时先清挤压态（拖拽态保留，由 pointerup 清理，避免切页/缩放时卡住）
+    if (pointerSquished) { pointerSquished = false; refreshSquish(); }
     const { w, h } = widgetSize();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const vw = window.innerWidth || document.documentElement.clientWidth || 1280;
+    const vh = window.innerHeight || document.documentElement.clientHeight || 800;
     if (cfg.snapX == null && cfg.x != null) cfg.x = clamp(cfg.x, 0, vw - w);
     if (cfg.snapY == null && cfg.y != null) cfg.y = clamp(cfg.y, 0, vh - h);
     applyPosition(false);
@@ -665,6 +667,36 @@
       root.addEventListener('pointerup', onPointerUp);
       root.addEventListener('pointercancel', onPointerCancel);
       window.addEventListener('resize', onResize);
+      // 兜底：ResizeObserver + visualViewport + Tauri 窗口事件，防止还原/最大化时 resize 丢失
+      try {
+        const ro = new ResizeObserver(() => onResize());
+        ro.observe(document.documentElement);
+        marcel.onCleanup(() => ro.disconnect());
+      } catch {}
+      try {
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', onResize);
+          marcel.onCleanup(() => window.visualViewport.removeEventListener('resize', onResize));
+        }
+      } catch {}
+      try {
+        const getWin = window.__TAURI__ && window.__TAURI__.window && window.__TAURI__.window.getCurrentWindow;
+        if (getWin) {
+          const win = getWin();
+          if (win && win.onResized) win.onResized(() => onResize()).then(fn => marcel.onCleanup(fn)).catch(()=>{});
+        }
+      } catch {}
+      // 定时兜底：若跑出视口，800ms 内拉回
+      const visibilityInterval = setInterval(() => {
+        if (!root || !root.isConnected) return;
+        const r = root.getBoundingClientRect();
+        const vw = window.innerWidth || document.documentElement.clientWidth;
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        if (r.width < 1 || r.left < -10 || r.top < -10 || r.left + r.width > vw + 10 || r.top + r.height > vh + 10) {
+          onResize();
+        }
+      }, 800);
+      marcel.onCleanup(() => clearInterval(visibilityInterval));
       window.addEventListener('keydown', onKeyDown, true);
       window.addEventListener('keyup', onKeyUp, true);
       window.addEventListener('blur', onBlur);
